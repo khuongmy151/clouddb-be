@@ -2,19 +2,22 @@ package com.example.clouddbbe.module.user.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Integer id;
 
     @Column(name = "username", length = 50, nullable = false, unique = true)
     private String username;
@@ -54,8 +57,8 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private int tokenVersion = 0;
 
-
-    public User(){
-
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 }
