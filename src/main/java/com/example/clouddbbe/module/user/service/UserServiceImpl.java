@@ -12,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-
+import java.time.LocalDateTime;
 
 
 @Service
@@ -59,6 +59,9 @@ public class UserServiceImpl implements UserService{
             );
         }
 
+        String dicebear = "https://api.dicebear.com/10.x/adventurer-neutral/svg?backgroundColor=ffd9b0,ffa8bf&backgroundColorFill=linear&backgroundColorAngle=135&seed=";
+        String avatar = dicebear + request.username();
+
         User user = User.builder()
                 .username(request.username().trim())
                 .password(passwordEncoder.encode(request.password()))
@@ -66,7 +69,7 @@ public class UserServiceImpl implements UserService{
                 .email(request.email())
                 .role(role)
                 .status(status)
-                .avatar(request.avatar())
+                .avatar(avatar)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -81,6 +84,24 @@ public class UserServiceImpl implements UserService{
                 savedUser.getAvatar(),
                 savedUser.getCreatedAt()
         );
+    }
+
+    @Override
+    public UserResponse viewProfile(String username) {
+
+        User user= userRepository.findByUsername(username)
+                .orElseThrow(()-> new RuntimeException("User not found"));
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .role(user.getRole())
+                .email(user.getEmail())
+                .status(user.getStatus())
+                .avatar(user.getAvatar())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 
 }
