@@ -1,5 +1,7 @@
 package com.example.clouddbbe.module.user.service;
 
+import com.example.clouddbbe.module.user.dto.BanUserRequest;
+import com.example.clouddbbe.module.user.dto.ChangePasswordRequest;
 import com.example.clouddbbe.module.user.dto.CreateUserRequest;
 import com.example.clouddbbe.module.user.dto.UserResponse;
 import com.example.clouddbbe.module.user.entity.Role;
@@ -101,6 +103,137 @@ public class UserServiceImpl implements UserService{
                 .status(user.getStatus())
                 .avatar(user.getAvatar())
                 .createdAt(user.getCreatedAt())
+                .build();
+    }
+    @Override
+    public UserResponse banUser(String username, BanUserRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với username: " + username
+                ));
+
+        // Không cho phép chặn chính admin đang đăng nhập (nếu bạn muốn kiểm tra thêm)
+        // if (user.getRole() == Role.ADMIN) { ... }
+
+        if (user.getStatus() == Status.BANNED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Người dùng này đã bị chặn trước đó"
+            );
+        }
+
+        user.setStatus(Status.BANNED);
+        user.setBanReason(request.banReason().trim());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // Tăng tokenVersion để vô hiệu hóa tất cả JWT hiện tại của user này
+        user.setTokenVersion(user.getTokenVersion() + 1);
+
+        User bannedUser = userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(bannedUser.getId())
+                .username(bannedUser.getUsername())
+                .fullname(bannedUser.getFullname())
+                .email(bannedUser.getEmail())
+                .role(bannedUser.getRole())
+                .status(bannedUser.getStatus())
+                .avatar(bannedUser.getAvatar())
+                .createdAt(bannedUser.getCreatedAt())
+                .build();
+    }
+
+
+
+
+    @Override
+    public UserResponse unbanUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với username: " + username
+                ));
+
+        if (user.getStatus() == Status.ACTIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Người dùng này hiện đang hoạt động, không cần mở khóa"
+            );
+        }
+
+        user.setStatus(Status.ACTIVE);
+        user.setBanReason(null);          // Xóa lý do ban
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // Tăng tokenVersion để buộc user phải đăng nhập lại
+        // (nếu bạn muốn giữ session cũ thì bỏ dòng này)
+        user.setTokenVersion(user.getTokenVersion() + 1);
+
+        User unbannedUser = userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(unbannedUser.getId())
+                .username(unbannedUser.getUsername())
+                .fullname(unbannedUser.getFullname())
+                .email(unbannedUser.getEmail())
+                .role(unbannedUser.getRole())
+                .status(unbannedUser.getStatus())
+                .avatar(unbannedUser.getAvatar())
+                .createdAt(unbannedUser.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public UserResponse changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với username: " + username
+                ));
+
+        // Kiểm tra mật khẩu hiện tại
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mật khẩu hiện tại không đúng"
+            );
+        }
+
+        // Kiểm tra xác nhận mật khẩu
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mật khẩu xác nhận không khớp"
+            );
+        }
+
+        // Không cho phép dùng lại mật khẩu cũ
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Mật khẩu mới không được trùng với mật khẩu hiện tại"
+            );
+        }
+
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // Tăng tokenVersion → vô hiệu hóa tất cả JWT cũ (bắt buộc đăng nhập lại)
+        user.setTokenVersion(user.getTokenVersion() + 1);
+
+        User updatedUser = userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(updatedUser.getId())
+                .username(updatedUser.getUsername())
+                .fullname(updatedUser.getFullname())
+                .email(updatedUser.getEmail())
+                .role(updatedUser.getRole())
+                .status(updatedUser.getStatus())
+                .avatar(updatedUser.getAvatar())
+                .createdAt(updatedUser.getCreatedAt())
                 .build();
     }
 

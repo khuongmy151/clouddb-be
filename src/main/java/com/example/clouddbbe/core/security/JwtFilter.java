@@ -70,6 +70,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(HttpServletRequest request) {
+        // 1. Ưu tiên lấy từ Cookie (dành cho Frontend)
         if (request.getCookies() != null) {
             String cookieToken = Arrays.stream(request.getCookies())
                     .filter(cookie -> "phuong_paas".equals(cookie.getName()))
@@ -82,11 +83,21 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
+        // 2. Lấy từ Header Authorization: Bearer <token> (dành cho Postman / API client)
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // bỏ chữ "Bearer "
+        }
+
+        // 3. Lấy từ query param (tùy chọn)
         String paramToken = request.getParameter("token");
         if (paramToken != null && !paramToken.isBlank()) {
             return paramToken;
         }
 
         return null;
+
+
+
     }
 }
