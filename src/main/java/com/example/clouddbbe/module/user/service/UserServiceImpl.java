@@ -1,14 +1,14 @@
 package com.example.clouddbbe.module.user.service;
 
-import com.example.clouddbbe.module.user.dto.BanUserRequest;
-import com.example.clouddbbe.module.user.dto.ChangePasswordRequest;
-import com.example.clouddbbe.module.user.dto.CreateUserRequest;
-import com.example.clouddbbe.module.user.dto.UserResponse;
+import com.example.clouddbbe.core.response.PaginationResponse;
+import com.example.clouddbbe.module.user.dto.*;
 import com.example.clouddbbe.module.user.entity.Role;
 import com.example.clouddbbe.module.user.entity.Status;
 import com.example.clouddbbe.module.user.entity.User;
 import com.example.clouddbbe.module.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -237,4 +237,55 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
+    @Override
+    public PaginationResponse<UserResponse> getUsers(
+            String keyword,
+            Role role,
+            Status status,
+            Pageable pageable
+    ) {
+        // Chuẩn hóa keyword
+        String searchKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+
+        Page<User> page = userRepository.searchUsers(searchKeyword, role, status, pageable);
+
+        Page<UserResponse> responsePage = page.map(user -> UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullname(user.getFullname())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .avatar(user.getAvatar())
+                .createdAt(user.getCreatedAt())
+                .build());
+
+        return PaginationResponse.of(responsePage);
+    }
+
+    @Override
+    public UserResponse updateUser(String username, UpdateUserRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với username: " + username
+                ));
+
+        // Cập nhật họ tên
+        user.setFullname(request.fullname().trim());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        User updatedUser = userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(updatedUser.getId())
+                .username(updatedUser.getUsername())
+                .fullname(updatedUser.getFullname())
+                .email(updatedUser.getEmail())
+                .role(updatedUser.getRole())
+                .status(updatedUser.getStatus())
+                .avatar(updatedUser.getAvatar())
+                .createdAt(updatedUser.getCreatedAt())
+                .build();
+    }
 }

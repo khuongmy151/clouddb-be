@@ -1,9 +1,10 @@
 package com.example.clouddbbe.module.user.service;
 
-import com.example.clouddbbe.module.user.dto.BanUserRequest;
-import com.example.clouddbbe.module.user.dto.ChangePasswordRequest;
-import com.example.clouddbbe.module.user.dto.CreateUserRequest;
-import com.example.clouddbbe.module.user.dto.UserResponse;
+import com.example.clouddbbe.core.response.PaginationResponse;
+import com.example.clouddbbe.module.user.dto.*;
+import com.example.clouddbbe.module.user.entity.Role;
+import com.example.clouddbbe.module.user.entity.Status;
+import org.springframework.data.domain.Pageable;
 
 public interface UserService {
     UserResponse createUser(CreateUserRequest createUserRequest);
@@ -14,5 +15,14 @@ public interface UserService {
     UserResponse unbanUser(String username);
 
     UserResponse changePassword(String username, ChangePasswordRequest request);
+
+    PaginationResponse<UserResponse> getUsers(
+            String keyword,
+            Role role,
+            Status status,
+            Pageable pageable
+    );
+
+    UserResponse updateUser(String username, UpdateUserRequest request);
 
 }
