@@ -87,17 +87,6 @@ public class UserController {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<PaginationResponse<UserResponse>> getUsers(
@@ -133,5 +122,18 @@ public class UserController {
         UserResponse response = userService.updateUser(username, request);
         return ResponseEntity.ok(response);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{username}")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable("username") String username,
+            Authentication authentication
+    ) {
+        String currentUsername = authentication.getName();
+        userService.deleteUser(username, currentUsername);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Service
@@ -287,5 +288,32 @@ public class UserServiceImpl implements UserService{
                 .avatar(updatedUser.getAvatar())
                 .createdAt(updatedUser.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public void deleteUser(String username, String currentUsername) {
+        // Không cho phép xóa chính mình
+        if (username.equals(currentUsername)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Bạn không thể xóa chính tài khoản của mình"
+            );
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Không tìm thấy người dùng với username: " + username
+                ));
+
+        // Không cho phép Admin xóa Admin khác
+        if (user.getRole() == Role.ADMIN) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Không được phép xóa tài khoản Admin khác"
+            );
+        }
+
+        userRepository.delete(user); // Xóa cứng
     }
 }

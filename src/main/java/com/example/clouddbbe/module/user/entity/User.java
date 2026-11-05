@@ -51,7 +51,7 @@ public class User {
     @Column(name = "updated_at", updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at", updatable = false, nullable = true)
+    @Column(name = "deleted_at", nullable = true)
     private LocalDateTime deletedAt;
 
     @Column(name = "token_version", nullable = false)

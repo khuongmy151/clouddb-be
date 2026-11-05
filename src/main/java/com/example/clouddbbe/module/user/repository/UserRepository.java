@@ -15,21 +15,32 @@ public interface UserRepository extends JpaRepository<User,Integer> {
 
     boolean existsByEmail(String email);
     boolean existsByUsername( String username);
-    Optional<User> findByUsername(String username);
-    // Cách 1: Query đơn giản (khuyến nghị nếu chỉ cần vài điều kiện)
+    // Cập nhật method tìm theo username
+    @Query("SELECT u FROM User u WHERE u.username = :username AND u.deletedAt IS NULL")
+    Optional<User> findByUsername(@Param("username") String username);
+
+    // Cập nhật searchUsers
     @Query("""
-            SELECT u FROM User u
-            WHERE (:keyword IS NULL OR :keyword = '' OR
-                   LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(u.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:role IS NULL OR u.role = :role)
-              AND (:status IS NULL OR u.status = :status)
-            """)
+        SELECT u FROM User u
+        WHERE u.deletedAt IS NULL
+          AND (:keyword IS NULL OR :keyword = '' OR
+               LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(u.fullname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:role IS NULL OR u.role = :role)
+          AND (:status IS NULL OR u.status = :status)
+        """)
     Page<User> searchUsers(
             @Param("keyword") String keyword,
             @Param("role") Role role,
             @Param("status") Status status,
             Pageable pageable
     );
+
+    long countByRole(Role role);
+
+
+
+
+
 }
