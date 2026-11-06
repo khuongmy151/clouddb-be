@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.Console;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,7 +28,7 @@ public class UserController {
 
 
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request){
         UserResponse reponse = userService.createUser(request);

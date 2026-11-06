@@ -2,6 +2,8 @@ package com.example.clouddbbe.module.auth.service;
 
 import com.example.clouddbbe.core.security.CookieUtil;
 import com.example.clouddbbe.core.security.JwtService;
+import com.example.clouddbbe.module.activity.entity.ActionType;
+import com.example.clouddbbe.module.activity.service.ActivityLogService;
 import com.example.clouddbbe.module.auth.dto.AuthRequest;
 import com.example.clouddbbe.module.auth.dto.AuthResponse;
 import com.example.clouddbbe.module.user.entity.Status;
@@ -11,6 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -18,15 +22,17 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final CookieUtil cookieUtil;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     public AuthServiceImpl(UserRepository userRepository,
                            JwtService jwtService,
                            CookieUtil cookieUtil,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, ActivityLogService activityLogService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.cookieUtil = cookieUtil;
         this.passwordEncoder = passwordEncoder;
+        this.activityLogService = activityLogService;
     }
 
     @Override
@@ -52,6 +58,12 @@ public class AuthServiceImpl implements AuthService {
         // 5. Set cookie
         cookieUtil.addTokenCookie(response, token);
 
+        activityLogService.logTargetUser(
+                user.getId(),
+                user.getId(),
+                ActionType.LOGIN,
+                user.getUsername() + " đã đăng nhập lúc " + LocalDateTime.now()
+        );
         return new AuthResponse(user.getUsername(), user.getRole());
     }
 }
