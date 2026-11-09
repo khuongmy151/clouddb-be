@@ -80,7 +80,24 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+
+
+        <!-- Thư viện gửi mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Thư viện template engine để render HTML mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
     </dependencies>
+
+
 
     <build>
         <plugins>
@@ -114,5 +131,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>

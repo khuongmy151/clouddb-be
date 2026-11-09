@@ -16,9 +16,5 @@ public record UserResponse(
         String avatar,
         LocalDateTime createdAt
 
-
 ) {
-
-
-
 }
