@@ -9,44 +9,22 @@ import org.springframework.data.domain.Pageable;
 
 public interface ActivityLogService {
 
-    /**
-     * Ghi log hành động cơ bản (chỉ có user thực hiện).
-     *
-     * @param idUser      ID người thực hiện hành động
-     * @param actionType  Loại hành động
-     * @param description Mô tả chi tiết
-     */
     void log(Integer idUser, ActionType actionType, String description);
 
-    /**
-     * Ghi log hành động tác động lên một user khác.
-     *
-     * @param idUser       ID người thực hiện
-     * @param targetUserId ID người bị tác động
-     * @param actionType   Loại hành động
-     * @param description  Mô tả chi tiết
-     */
     void logTargetUser(Integer idUser, Integer targetUserId,
                        ActionType actionType, String description);
 
-    /**
-     * Ghi log hành động tác động lên một database.
-     *
-     * @param idUser     ID người thực hiện
-     * @param targetDbId ID database bị tác động
-     * @param actionType Loại hành động
-     * @param description Mô tả chi tiết
-     */
     void logTargetDb(Integer idUser, Integer targetDbId,
                      ActionType actionType, String description);
 
+    // Đã đổi tham số từ userId → username + name
     PaginationResponse<ActivityLogResponse> getActivityLog(
-            Integer userId,
+            String username,
+            String name,
             ActionType actionType,
             Integer targetUserId,
             Pageable pageable
     );
-
 
     ActivityLogResponse mapToResponse(ActivityLog activityLog);
 
@@ -57,4 +35,5 @@ public interface ActivityLogService {
             Integer targetDbId,
             Pageable pageable
     );
+
 }

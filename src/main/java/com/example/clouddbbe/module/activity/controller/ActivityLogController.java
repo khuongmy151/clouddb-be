@@ -29,36 +29,27 @@ public class ActivityLogController {
         this.userRepository = userRepository;
     }
 
-
-
+    /**
+     * Admin xem nhật ký hoạt động
+     * Hỗ trợ tìm theo username, name (fullname), actionType
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin")
     public ResponseEntity<PaginationResponse<ActivityLogResponse>> getActivityLog(
-            @RequestParam(required = false) Integer userId,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) ActionType actionType,
             @RequestParam(required = false) Integer targetUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
-//            @RequestParam(defaultValue = "") ,
-//            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-     ){
-        // Validate sort field để tránh lỗi
-//        String validSortBy = switch (sortBy.toLowerCase()) {
-//            case "username", "fullname", "email", "role", "status", "createdat" -> sortBy;
-//            default -> "createdAt";
-//        };
-
-//        Sort sort = sortDir.equalsIgnoreCase("asc")
-//                ? Sort.by(validSortBy).ascending()
-//                : Sort.by(validSortBy).descending();
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        PaginationResponse<ActivityLogResponse> response = activityLogService.getActivityLog(userId, actionType, targetUserId, pageable);
+        PaginationResponse<ActivityLogResponse> response = activityLogService.getActivityLog(
+                username, name, actionType, targetUserId, pageable
+        );
         return ResponseEntity.ok(response);
     }
-
 
     /**
      * User xem nhật ký hoạt động của chính mình
@@ -85,12 +76,10 @@ public class ActivityLogController {
     }
 
     private Integer extractUserId(Authentication authentication) {
-
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("Chưa đăng nhập");
         }
-
-         String username = authentication.getName();
-         return userRepository.findIdByUsername(username);
+        String username = authentication.getName();
+        return userRepository.findIdByUsername(username);
     }
 }

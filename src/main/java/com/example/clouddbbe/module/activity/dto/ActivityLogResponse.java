@@ -13,6 +13,9 @@ public record ActivityLogResponse(
         Integer targetDb,
         ActionType actionType,
         String description,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String username,          // ← thêm
+        String fullname,          // ← thêm (name)
+        String targetUsername  // ← thêm
 ) {
 }

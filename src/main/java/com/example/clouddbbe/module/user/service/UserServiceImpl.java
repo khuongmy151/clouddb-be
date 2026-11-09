@@ -106,6 +106,15 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setTokenVersion(user.getTokenVersion() + 1);
 
+
+        activityLogService.logTargetUser(
+                getCurrentUserId(),
+                user.getId(),
+                ActionType.BAN_USER,
+                "Admin da chan user: " + user.getUsername()
+        );
+
+
         return mapToResponse(userRepository.save(user));
     }
 
@@ -125,6 +134,14 @@ public class UserServiceImpl implements UserService {
         user.setBanReason(null);
         user.setUpdatedAt(LocalDateTime.now());
         user.setTokenVersion(user.getTokenVersion() + 1);
+
+
+        activityLogService.logTargetUser(
+                getCurrentUserId(),
+                user.getId(),
+                ActionType.UNBAN_USER,
+                "Admin da bo chan user: " + user.getUsername()
+        );
 
         return mapToResponse(userRepository.save(user));
     }
@@ -159,6 +176,13 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setTokenVersion(user.getTokenVersion() + 1);
 
+        activityLogService.logTargetUser(
+                getCurrentUserId(),
+                user.getId(),
+                ActionType.CHANGE_PASSWORD,
+                user.getUsername() + " Da thay doi mat khau"
+        );
+
         return mapToResponse(userRepository.save(user));
     }
 
@@ -190,6 +214,14 @@ public class UserServiceImpl implements UserService {
 
         user.setFullname(request.fullname().trim());
         user.setUpdatedAt(LocalDateTime.now());
+
+        activityLogService.logTargetUser(
+                getCurrentUserId(),
+                user.getId(),
+                ActionType.UPDATE_USER,
+                user.getUsername() + " Da cap nhat thong tin"
+        );
+
 
         return mapToResponse(userRepository.save(user));
     }
