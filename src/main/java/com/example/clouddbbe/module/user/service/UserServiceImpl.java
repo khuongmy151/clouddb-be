@@ -4,6 +4,7 @@ import com.example.clouddbbe.core.exception.BusinessException;
 import com.example.clouddbbe.core.response.PaginationResponse;
 import com.example.clouddbbe.module.activity.entity.ActionType;
 import com.example.clouddbbe.module.activity.service.ActivityLogService;
+import com.example.clouddbbe.module.mail.service.MailService;
 import com.example.clouddbbe.module.user.dto.*;
 import com.example.clouddbbe.module.user.entity.Role;
 import com.example.clouddbbe.module.user.entity.Status;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ActivityLogService activityLogService;
+    private final MailService mailService;
 
     private static final String DICEBEAR_BASE =
             "https://api.dicebear.com/10.x/adventurer-neutral/svg"
@@ -70,8 +73,21 @@ public class UserServiceImpl implements UserService {
                 "Tạo tài khoản mới: " + saved.getUsername()
         );
 
-        return mapToResponse(userRepository.save(user));
+        // Gửi mail chào mừng (kèm mật khẩu gốc)
+        mailService.sendHtmlMail(
+                saved.getEmail(),
+                "Chào mừng bạn đến với CloudDB",
+                "welcome",
+                Map.of(
+                        "fullname", saved.getFullname(),
+                        "username", saved.getUsername(),
+                        "email", saved.getEmail(),
+                        "password", request.password(),
+                        "role", saved.getRole().name()
+                )
+        );
 
+        return mapToResponse(saved);
 
     }
 
@@ -114,6 +130,16 @@ public class UserServiceImpl implements UserService {
                 "Admin da chan user: " + user.getUsername()
         );
 
+        mailService.sendHtmlMail(
+                user.getEmail(),
+                "Bạn đã bị chặn vào CloudDB",
+                "account-banned",
+                Map.of(
+                        "fullname", user.getFullname(),
+                        "username", user.getUsername(),
+                        "banReason", user.getBanReason()
+                )
+        );
 
         return mapToResponse(userRepository.save(user));
     }
@@ -141,6 +167,16 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 ActionType.UNBAN_USER,
                 "Admin da bo chan user: " + user.getUsername()
+        );
+
+        mailService.sendHtmlMail(
+                user.getEmail(),
+                "Bạn đã được mở chặn vào CloudDB",
+                "account-unbanned",
+                Map.of(
+                        "fullname", user.getFullname(),
+                        "username", user.getUsername()
+                )
         );
 
         return mapToResponse(userRepository.save(user));
@@ -181,6 +217,16 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 ActionType.CHANGE_PASSWORD,
                 user.getUsername() + " Da thay doi mat khau"
+        );
+
+        mailService.sendHtmlMail(
+                user.getEmail(),
+                "Bạn đã đổi mật khẩu CloudDB",
+                "password-changed",
+                Map.of(
+                        "fullname", user.getFullname(),
+                        "username", user.getUsername()
+                )
         );
 
         return mapToResponse(userRepository.save(user));

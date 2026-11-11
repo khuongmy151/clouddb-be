@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Tài khoản đã được mở khóa</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #27ae60;">Tài khoản đã được mở khóa</h2>
+  <p>Xin chào <span th:text="${fullname}">User</span>,</p>
+  <p>Tài khoản <strong th:text="${username}">username</strong> của bạn đã được quản trị viên mở khóa và có thể sử dụng bình thường trở lại.</p>
+
+  <p>Bạn có thể đăng nhập lại ngay bây giờ.</p>
+  <p style="margin-top: 30px;">Trân trọng,<br><strong>Đội ngũ CloudDB</strong></p>
+</div>
+</body>
+</html>
