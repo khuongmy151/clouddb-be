@@ -7,4 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthService {
     AuthResponse login(AuthRequest authRequest, HttpServletResponse response);
 
+    void logout(HttpServletResponse response);
+
 }

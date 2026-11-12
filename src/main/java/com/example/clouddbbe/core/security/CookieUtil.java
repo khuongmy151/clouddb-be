@@ -1,5 +1,6 @@
 package com.example.clouddbbe.core.security;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,16 @@ public class CookieUtil {
 
     @Value("${jwt.cookie.same-site:}")
     private String sameSite;
+
+
+    public void deleteTokenCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("phuong_paas", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);          // true nếu dùng HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(0);              // Xóa ngay
+        response.addCookie(cookie);
+    }
 
     public void addTokenCookie(HttpServletResponse response, String token){
         String cookie=buildCookie("phuong_paas", token);

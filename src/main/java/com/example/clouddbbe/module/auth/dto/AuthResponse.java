@@ -4,7 +4,7 @@ import com.example.clouddbbe.module.user.entity.Role;
 
 public record AuthResponse(
         String username,
-        Role role
-
+        Role role,
+        String avatar_url
 ) {
 }

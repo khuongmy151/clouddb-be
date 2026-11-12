@@ -1,6 +1,7 @@
 package com.example.clouddbbe.core.security;
 
 
+import com.example.clouddbbe.core.response.ErrorResponse;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -63,7 +65,17 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized - Phiên đăng nhập không hợp lệ");
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+
+                            ErrorResponse error = ErrorResponse.of(
+                                    401,
+                                    "Unauthorized",
+                                    "Bạn chưa đăng nhập hoặc phiên đăng nhập không hợp lệ",
+                                    request.getRequestURI()
+                            );
+
+                            new ObjectMapper().writeValue(response.getWriter(), error);
                         })
                 )
                 .authorizeHttpRequests(auth -> auth

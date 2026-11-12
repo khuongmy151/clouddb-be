@@ -33,7 +33,17 @@ public class AuthServiceImpl implements AuthService {
         this.cookieUtil = cookieUtil;
         this.passwordEncoder = passwordEncoder;
         this.activityLogService = activityLogService;
+
+
+
     }
+
+    @Override
+    public void logout(HttpServletResponse response) {
+        // Xóa cookie token
+        cookieUtil.deleteTokenCookie(response);
+    }
+
 
     @Override
     public AuthResponse login(AuthRequest request, HttpServletResponse response) {
@@ -64,6 +74,10 @@ public class AuthServiceImpl implements AuthService {
                 ActionType.LOGIN,
                 user.getUsername() + " đã đăng nhập lúc " + LocalDateTime.now()
         );
-        return new AuthResponse(user.getUsername(), user.getRole());
+
+
+
+
+        return new AuthResponse(user.getUsername(), user.getRole(), user.getAvatar());
     }
 }
