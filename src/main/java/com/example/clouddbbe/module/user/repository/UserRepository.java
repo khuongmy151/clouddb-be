@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
@@ -18,6 +19,13 @@ public interface UserRepository extends JpaRepository<User,Integer> {
     // Cập nhật method tìm theo username
     @Query("SELECT u FROM User u WHERE u.username = :username AND u.deletedAt IS NULL")
     Optional<User> findByUsername(@Param("username") String username);
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE u.deletedAt IS NULL
+          AND ( u.email = :emailOrUsername or u.username = :emailOrUsername)
+        """)
+    Optional<User> findByUserAndEmail(@Param("emailOrUsername") String emailOrUsername);
 
     // Cập nhật searchUsers
     @Query("""

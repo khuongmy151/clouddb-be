@@ -48,8 +48,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(AuthRequest request, HttpServletResponse response) {
         // 1. Tìm user
-        User user = userRepository.findByUsername(request.usernameOrEmail())
-                .or(() -> userRepository.findByUsername(request.usernameOrEmail()))
+        User user = userRepository.findByUserAndEmail(request.usernameOrEmail())
+                .or(() -> userRepository.findByUserAndEmail(request.usernameOrEmail()))
                 .orElseThrow(() -> new RuntimeException("Sai tài khoản hoặc mật khẩu"));
 
         // 2. Kiểm tra mật khẩu
@@ -74,10 +74,6 @@ public class AuthServiceImpl implements AuthService {
                 ActionType.LOGIN,
                 user.getUsername() + " đã đăng nhập lúc " + LocalDateTime.now()
         );
-
-
-
-
         return new AuthResponse(user.getUsername(), user.getRole(), user.getAvatar());
     }
 }
