@@ -103,6 +103,27 @@ public class UserServiceImpl implements UserService {
     public UserResponse banUser(String username, BanUserRequest request) {
         User user = findUserOrThrow(username);
 
+        // 1. Lấy thông tin user đang thực hiện thao tác
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = findUserOrThrow(currentUsername);
+
+        // 2. Không thể tự khóa chính mình
+        if (user.getUsername().equals(currentUsername)) {
+            throw new BusinessException(
+                    "Bạn không thể tự khóa tài khoản của chính mình",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+
+        // 3. Không thể khóa người dùng có cùng Role (ví dụ: Admin không được khóa Admin khác)
+        if (user.getRole() == currentUser.getRole()) {
+            throw new BusinessException(
+                    "Bạn không thể khóa tài khoản có cùng vai trò với mình",
+                    HttpStatus.FORBIDDEN
+            );
+        }
+
+        // 4. Kiểm tra trạng thái hiện tại
         if (user.getStatus() == Status.BANNED) {
             throw new BusinessException(
                     "Người dùng này đã bị chặn trước đó",
@@ -110,6 +131,7 @@ public class UserServiceImpl implements UserService {
             );
         }
 
+        // 5. Kiểm tra lý do (giữ nguyên logic cũ)
         if (!StringUtils.hasText(request.banReason())) {
             throw new BusinessException(
                     "Lý do chặn không được để trống",
@@ -117,17 +139,17 @@ public class UserServiceImpl implements UserService {
             );
         }
 
+        // Cập nhật thông tin
         user.setStatus(Status.BANNED);
         user.setBanReason(request.banReason().trim());
         user.setUpdatedAt(LocalDateTime.now());
         user.setTokenVersion(user.getTokenVersion() + 1);
 
-
         activityLogService.logTargetUser(
                 getCurrentUserId(),
                 user.getId(),
                 ActionType.BAN_USER,
-                "Admin da chan user: " + user.getUsername()
+                "Admin đã chặn user: " + user.getUsername()
         );
 
         mailService.sendHtmlMail(
