@@ -41,9 +41,14 @@ public class ActivityLogController {
             @RequestParam(required = false) ActionType actionType,
             @RequestParam(required = false) Integer targetUserId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir)
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         PaginationResponse<ActivityLogResponse> response = activityLogService.getActivityLog(
                 username, name, actionType, targetUserId, pageable
@@ -59,17 +64,21 @@ public class ActivityLogController {
             @RequestParam(required = false) ActionType actionType,
             @RequestParam(required = false) Integer targetUserId,
             @RequestParam(required = false) Integer targetDbId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDir
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Integer currentUserId = extractUserId(authentication);
 
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir)
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
         PaginationResponse<ActivityLogResponse> result = activityLogService.getMyActivityLogs(
-                currentUserId,
-                actionType,
-                targetUserId,
-                targetDbId,
-                pageable
+                currentUserId, actionType, targetUserId, targetDbId, pageable
         );
 
         return ResponseEntity.ok(result);

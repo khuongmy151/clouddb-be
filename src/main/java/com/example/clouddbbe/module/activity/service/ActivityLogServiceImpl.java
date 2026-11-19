@@ -16,9 +16,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,6 +32,14 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     private final ActivityLogRepository activityLogRepository;
     private final UserRepository userRepository;
+
+    // Định dạng hiển thị: dd/MM/yyyy HH:mm:ss
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+    // Regex bắt các chuỗi ISO LocalDateTime (VD: 2026-11-19T21:42:19.652727200 hoặc 2026-11-19T21:42:19)
+    private static final Pattern ISO_DATE_PATTERN = Pattern.compile(
+            "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?)"
+    );
 
     @Async
     @Override
@@ -55,17 +67,48 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     private void save(Integer idUser, Integer targetUser, Integer targetDb,
                       ActionType actionType, String description) {
         try {
+            // Xử lý format lại thời gian trong description trước khi lưu
+            String formattedDescription = formatDescriptionTime(description);
+
             ActivityLog activityLog = ActivityLog.builder()
                     .idUser(idUser)
                     .targetUser(targetUser)
                     .targetDb(targetDb)
                     .actionType(actionType)
-                    .description(description)
+                    .description(formattedDescription)
                     .build();
             activityLogRepository.save(activityLog);
         } catch (Exception e) {
             log.error("Failed to write activity log [{}]: {}", actionType, e.getMessage(), e);
         }
+    }
+
+    /**
+     * Tìm các chuỗi ISO DateTime trong description và format lại thành dd/MM/yyyy HH:mm:ss
+     */
+    private String formatDescriptionTime(String description) {
+        if (description == null || description.isEmpty()) {
+            return description;
+        }
+
+        Matcher matcher = ISO_DATE_PATTERN.matcher(description);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String isoDateStr = matcher.group(1);
+            try {
+                // Parse chuỗi ISO (hỗ trợ cả có và không có phần thập phân giây)
+                LocalDateTime dateTime = LocalDateTime.parse(isoDateStr);
+                String formattedDate = dateTime.format(FORMATTER);
+                // Thay thế bằng chuỗi đã format (dùng Matcher.quoteReplacement để tránh lỗi ký tự $)
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(formattedDate));
+            } catch (Exception e) {
+                // Nếu parse lỗi, giữ nguyên chuỗi gốc
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(isoDateStr));
+            }
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     @Override
